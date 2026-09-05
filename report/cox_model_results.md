@@ -65,11 +65,49 @@ Concordance: `0.72`; partial AIC: `249.94`.
 
 Concordance: `0.88`; partial AIC: `151.45`.
 
-## 3. Kiểm định proportional hazards
+## 3. Phân loại đã thoát và chưa thoát khỏi bẫy
+
+Quy tắc phân loại được áp dụng riêng cho từng nhóm thu nhập:
+
+- **Đã thoát:** spell có `event = 1` và thời gian chuyển đổi `<=` median duration của các spell đã event trong cùng nhóm.
+- **Chưa thoát:** spell bị censor, hoặc spell có `event = 1` nhưng thời gian chuyển đổi **> median**.
+
+| Nhóm | Median duration | Tổng spells | Đã thoát | Chưa thoát | Censored |
+|---|---:|---:|---:|---:|---:|
+| LM -> UM | 8.0 năm | 66 | 21 | 45 | 28 |
+| UM -> H | 7.5 năm | 69 | 13 | 56 | 43 |
+
+### So sánh đặc trưng giữa hai nhóm - LM -> UM
+
+| Biến | Mean đã thoát | Mean chưa thoát | Mann-Whitney p |
+|---|---:|---:|---:|
+| TFP | 0.991 | 1.001 | 0.2766 |
+| GE | -0.318 | -0.490 | 0.1231 |
+| AGEDEP | 55.346 | 66.600 | 0.0040 |
+| IND | 14.789 | 13.825 | 0.2103 |
+| TO | 70.284 | 72.472 | 0.6496 |
+| CREDIT | 45.960 | 34.636 | 0.0286 |
+| ECI | 0.003 | -0.434 | 0.0160 |
+
+### So sánh đặc trưng giữa hai nhóm - UM -> H
+
+| Biến | Mean đã thoát | Mean chưa thoát | Mann-Whitney p |
+|---|---:|---:|---:|
+| TFP | 1.057 | 1.015 | 0.0643 |
+| GE | 0.399 | -0.015 | 0.0028 |
+| AGEDEP | 49.051 | 52.485 | 0.1558 |
+| IND | 15.819 | 14.272 | 0.3859 |
+| TO | 101.537 | 74.206 | 0.0201 |
+| CREDIT | 47.630 | 53.730 | 0.5242 |
+| ECI | 0.852 | 0.147 | 0.0001 |
+
+Các p-value trên là kiểm định hai phía ở cấp spell, dùng để mô tả sự khác biệt giữa nhóm nhanh/đã thoát và nhóm chưa thoát; chúng không thay thế cho hazard ratio của mô hình Cox.
+
+## 4. Kiểm định proportional hazards
 
 Lifelines không hỗ trợ Schoenfeld residuals cho dữ liệu có `entry` time. Branch dùng kiểm định thay thế bằng tương tác `covariate x log(stop)`. Kết quả chi tiết nằm trong `report/ph_assumptions_*.csv` và `.txt`; chưa có bằng chứng vi phạm PH ở ngưỡng 5%.
 
-## 4. Output
+## 5. Output
 
 - Summary: `report/cox_summary_combined.csv`, `report/cox_summary_lm.csv`, `report/cox_summary_um.csv`
 - Forest plots: `report/cox_forest_combined.png`, `report/cox_forest_lm.png`, `report/cox_forest_um.png`
