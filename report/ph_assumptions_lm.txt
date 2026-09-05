@@ -1,0 +1,15 @@
+Status: fallback_time_interaction
+
+Schoenfeld check unavailable: NotImplementedError: Residuals for entries not implemented.
+
+Fallback time-interaction test (covariate x log(stop)):
+                       coef         p
+covariate                            
+TFP_x_log_stop     3.151818  0.973839
+GE_x_log_stop     -1.209317  0.912709
+AGEDEP_x_log_stop  0.024450  0.950954
+IND_x_log_stop     0.028355  0.963090
+TO_x_log_stop      0.003168  0.976425
+CREDIT_x_log_stop -0.007556  0.909968
+ECI_x_log_stop     0.226428  0.913633
+Interpretation: p < 0.05 suggests a time-varying effect and possible PH violation.
