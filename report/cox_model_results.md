@@ -20,7 +20,7 @@
 
 Chỉ giữ hai transition `LM -> UM` và `UM -> H`. Các bước nhảy `LM -> H` bị loại khỏi mẫu.
 
-## 2. Kết quả mô hình
+## 2. Kết quả toàn bộ mô hình
 
 ### Combined LM + UM
 
@@ -37,7 +37,11 @@ Chỉ giữ hai transition `LM -> UM` và `UM -> H`. Các bước nhảy `LM -> 
 
 Concordance: `0.77`; partial AIC: `498.45`.
 
-### LM -> UM
+![Forest plot combined](cox_forest_combined.png)
+
+**Giải thích:** Điểm là log hazard ratio, thanh ngang là khoảng tin cậy 95%, đường dọc tại 0 là mốc không tác động. GE và ECI nằm phía dương, AGEDEP và `is_UM` phía âm. Tuy nhiên, ở mô hình combined chỉ AGEDEP và `is_UM` có p-value dưới 0.05; GE và ECI mới ở mức biên.
+
+## 3. Mô hình LM -> UM
 
 | Biến | Hazard ratio | p-value |
 |---|---:|---:|
@@ -51,7 +55,11 @@ Concordance: `0.77`; partial AIC: `498.45`.
 
 Concordance: `0.72`; partial AIC: `249.94`.
 
-### UM -> H
+![Forest plot LM to UM](cox_forest_lm.png)
+
+**Giải thích:** TFP có hazard ratio lớn nhưng khoảng tin cậy rất rộng, phản ánh chỉ có 38 event. AGEDEP có tác động âm và có ý nghĩa thống kê. Các khoảng tin cậy của GE, IND, TO, CREDIT và ECI đều bao quanh mốc 0 trên thang log-HR.
+
+## 4. Mô hình UM -> H
 
 | Biến | Hazard ratio | p-value |
 |---|---:|---:|
@@ -65,19 +73,29 @@ Concordance: `0.72`; partial AIC: `249.94`.
 
 Concordance: `0.88`; partial AIC: `151.45`.
 
-## 3. Phân loại đã thoát và chưa thoát khỏi bẫy
+![Forest plot UM to H](cox_forest_um.png)
 
-Quy tắc phân loại được áp dụng riêng cho từng nhóm thu nhập:
+**Giải thích:** GE, IND và ECI có p-value dưới 0.05 trong giai đoạn UM -> H. ECI có HR rất lớn nhưng khoảng tin cậy rộng, vì vậy nên diễn giải là bằng chứng mạnh trong mẫu hiện tại, không phải tác động chắc chắn ở mọi bối cảnh. CREDIT chỉ ở mức biên.
 
-- **Đã thoát:** spell có `event = 1` và thời gian chuyển đổi `<=` median duration của các spell đã event trong cùng nhóm.
-- **Chưa thoát:** spell bị censor, hoặc spell có `event = 1` nhưng thời gian chuyển đổi **> median**.
+## 5. Kaplan-Meier survival curves
+
+![Kaplan-Meier survival curves](kaplan_meier.png)
+
+**Cách đọc:** Trục hoành là số năm ở nhóm thu nhập; trục tung là xác suất chưa chuyển lên nhóm kế tiếp. Đường LM giảm nhanh hơn UM ở phần lớn thời gian, cho thấy hazard chuyển đổi của LM cao hơn. Đường UM nằm cao hơn nghĩa là các quốc gia UM có xu hướng ở lại nhóm lâu hơn trước khi lên High Income. Dải màu là khoảng tin cậy; vùng chồng lấn cho thấy khác biệt không nên diễn giải như một kiểm định riêng biệt.
+
+## 6. Phân loại đã thoát và chưa thoát khỏi bẫy
+
+Median duration được tính riêng từ các spell đã event trong từng nhóm:
+
+- **Đã thoát:** `event = 1` và duration `<= median`.
+- **Chưa thoát:** censored, hoặc `event = 1` nhưng duration `> median`.
 
 | Nhóm | Median duration | Tổng spells | Đã thoát | Chưa thoát | Censored |
 |---|---:|---:|---:|---:|---:|
 | LM -> UM | 8.0 năm | 66 | 21 | 45 | 28 |
 | UM -> H | 7.5 năm | 69 | 13 | 56 | 43 |
 
-### So sánh đặc trưng giữa hai nhóm - LM -> UM
+### LM -> UM
 
 | Biến | Mean đã thoát | Mean chưa thoát | Mann-Whitney p |
 |---|---:|---:|---:|
@@ -89,7 +107,7 @@ Quy tắc phân loại được áp dụng riêng cho từng nhóm thu nhập:
 | CREDIT | 45.960 | 34.636 | 0.0286 |
 | ECI | 0.003 | -0.434 | 0.0160 |
 
-### So sánh đặc trưng giữa hai nhóm - UM -> H
+### UM -> H
 
 | Biến | Mean đã thoát | Mean chưa thoát | Mann-Whitney p |
 |---|---:|---:|---:|
@@ -101,14 +119,14 @@ Quy tắc phân loại được áp dụng riêng cho từng nhóm thu nhập:
 | CREDIT | 47.630 | 53.730 | 0.5242 |
 | ECI | 0.852 | 0.147 | 0.0001 |
 
-Các p-value trên là kiểm định hai phía ở cấp spell, dùng để mô tả sự khác biệt giữa nhóm nhanh/đã thoát và nhóm chưa thoát; chúng không thay thế cho hazard ratio của mô hình Cox.
+Các p-value Mann-Whitney mô tả khác biệt ở cấp spell; chúng không thay thế hazard ratio của Cox. Nhóm “chưa thoát” bao gồm cả censored nên không được diễn giải như một nhóm thất bại quan sát đầy đủ.
 
-## 4. Kiểm định proportional hazards
+## 7. Kiểm định proportional hazards
 
-Lifelines không hỗ trợ Schoenfeld residuals cho dữ liệu có `entry` time. Branch dùng kiểm định thay thế bằng tương tác `covariate x log(stop)`. Kết quả chi tiết nằm trong `report/ph_assumptions_*.csv` và `.txt`; chưa có bằng chứng vi phạm PH ở ngưỡng 5%.
+Lifelines không hỗ trợ Schoenfeld residuals cho dữ liệu có `entry` time. Branch dùng kiểm định thay thế bằng tương tác `covariate x log(stop)`. Kết quả chi tiết nằm trong `ph_assumptions_*.csv` và `.txt`; chưa có bằng chứng vi phạm PH ở ngưỡng 5%.
 
-## 5. Output
+## 8. Output
 
-- Summary: `report/cox_summary_combined.csv`, `report/cox_summary_lm.csv`, `report/cox_summary_um.csv`
-- Forest plots: `report/cox_forest_combined.png`, `report/cox_forest_lm.png`, `report/cox_forest_um.png`
-- Kaplan-Meier: `report/kaplan_meier.png`
+- Summary: `cox_summary_combined.csv`, `cox_summary_lm.csv`, `cox_summary_um.csv`
+- Forest plots: `cox_forest_combined.png`, `cox_forest_lm.png`, `cox_forest_um.png`
+- Kaplan-Meier: `kaplan_meier.png`
