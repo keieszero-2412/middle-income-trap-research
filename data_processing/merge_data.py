@@ -21,13 +21,13 @@ def process_covariate(filename, value_name):
 
 df_agedep = process_covariate('AGEDEP.csv', 'AGEDEP')
 df_ge = process_covariate('GE.csv', 'GE')
-df_gfcf = process_covariate('GFCF.csv', 'GFCF')
+df_IND = process_covariate('IND.csv', 'IND')
 df_to = process_covariate('TO.csv', 'TO')
 
 print("Merging all dataframes...")
 df_final = pd.merge(df_inc_long, df_agedep, on=['Code', 'Year'], how='outer')
 df_final = pd.merge(df_final, df_ge, on=['Code', 'Year'], how='outer')
-df_final = pd.merge(df_final, df_gfcf, on=['Code', 'Year'], how='outer')
+df_final = pd.merge(df_final, df_IND, on=['Code', 'Year'], how='outer')
 df_final = pd.merge(df_final, df_to, on=['Code', 'Year'], how='outer')
 
 df_final.sort_values(by=['Code', 'Year'], inplace=True)
