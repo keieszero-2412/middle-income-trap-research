@@ -36,6 +36,11 @@ df_merged[cols_to_impute] = df_merged.groupby('Code')[cols_to_impute].transform(
     lambda x: x.interpolate(method='linear', limit_direction='both').ffill().bfill()
 )
 
+print("=== STEP 3.5: WINSORIZE (5% - 95%) ===")
+from scipy.stats.mstats import winsorize
+for col in cols_to_impute:
+    df_merged[col] = winsorize(df_merged[col], limits=[0.05, 0.05])
+
 df_merged.to_csv('final_lifelines_data.csv', index=False)
 
 print("=== STEP 4: FILTER OUT COUNTRIES WITH MISSING DATA ===")

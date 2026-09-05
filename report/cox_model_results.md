@@ -2,6 +2,7 @@
 
 **Branch:** `credit-only` | **Biến kiểm soát:** AGEDEP, GE, IND, CREDIT
 **Dữ liệu:** 175 quốc gia, giai đoạn 2000–2026 | **Phần mềm:** `lifelines` (Python)
+**Tiền xử lý:** Imputation (bfill/ffill) + **Winsorize 5%-95%** cho các biến độc lập
 
 ---
 
