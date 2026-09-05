@@ -27,17 +27,17 @@ Chỉ giữ hai transition `LM -> UM` và `UM -> H`. Các bước nhảy `LM -> 
 | Biến | Hazard ratio | p-value |
 |---|---:|---:|
 | TFP | 5.63 | 0.176 |
-| GE | 2.38* | 0.077 |
-| AGEDEP | 0.95** | 0.015 |
+| GE | 2.38<sup>*</sup> | 0.077 |
+| AGEDEP | 0.95<sup>**</sup> | 0.015 |
 | IND | 0.94 | 0.142 |
 | TO | 1.00 | 0.567 |
 | CREDIT | 0.99 | 0.263 |
-| ECI | 2.21* | 0.081 |
-| is_UM | 0.23*** | 0.005 |
+| ECI | 2.21<sup>*</sup> | 0.081 |
+| is_UM | 0.23<sup>***</sup> | 0.005 |
 
 Concordance: `0.77`; partial AIC: `498.45`.
 
-`* p < 0.10`, `** p < 0.05`, `*** p < 0.01`.
+<sup>*</sup> p < 0.10, <sup>**</sup> p < 0.05, <sup>***</sup> p < 0.01.
 
 ![Forest plot combined](cox_forest_combined.png)
 
@@ -47,9 +47,9 @@ Concordance: `0.77`; partial AIC: `498.45`.
 
 | Biến | Hazard ratio | p-value |
 |---|---:|---:|
-| TFP | 57.83** | 0.049 |
+| TFP | 57.83<sup>**</sup> | 0.049 |
 | GE | 1.50 | 0.546 |
-| AGEDEP | 0.93*** | 0.004 |
+| AGEDEP | 0.93<sup>***</sup> | 0.004 |
 | IND | 0.95 | 0.244 |
 | TO | 0.99 | 0.375 |
 | CREDIT | 1.01 | 0.626 |
@@ -66,12 +66,12 @@ Concordance: `0.72`; partial AIC: `249.94`.
 | Biến | Hazard ratio | p-value |
 |---|---:|---:|
 | TFP | 2.90 | 0.662 |
-| GE | 7.25** | 0.005 |
+| GE | 7.25<sup>**</sup> | 0.005 |
 | AGEDEP | 0.95 | 0.388 |
-| IND | 0.82** | 0.026 |
+| IND | 0.82<sup>**</sup> | 0.026 |
 | TO | 1.00 | 0.955 |
-| CREDIT | 0.98* | 0.094 |
-| ECI | 22.01*** | <0.005 |
+| CREDIT | 0.98<sup>*</sup> | 0.094 |
+| ECI | 22.01<sup>***</sup> | <0.005 |
 
 Concordance: `0.88`; partial AIC: `151.45`.
 
