@@ -1,139 +1,102 @@
-"""
-Cox Proportional Hazards Model for Middle Income Trap
-Focus: LM -> UM and UM -> H transitions
-Uses time-varying covariates (counting process format)
-"""
-import pandas as pd
+"""Run the main Cox PH branch with all model covariates."""
+import io
+import os
+from contextlib import redirect_stdout
+
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 from lifelines import CoxPHFitter, KaplanMeierFitter
 
-df = pd.read_csv('survival_data.csv')
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+os.chdir(BASE_DIR)
+FULL_COVARIATES = ['TFP', 'GE', 'AGEDEP', 'IND', 'TO', 'CREDIT', 'ECI']
 
-print("=" * 60)
-print("COX PROPORTIONAL HAZARDS MODEL - MIDDLE INCOME TRAP")
-print("=" * 60)
 
-# ============================================================
-# MODEL 1: Combined (LM + UM together)
-# ============================================================
-print("\n### MODEL 1: COMBINED (LM + UM) ###")
+def check_ph(model, data, output_path):
+    """Check PH and fall back to time interactions for left-truncated data."""
+    buffer = io.StringIO()
+    try:
+        with redirect_stdout(buffer):
+            model.check_assumptions(data, p_value_threshold=0.05, show_plots=False)
+        status = 'completed'
+    except Exception as exc:
+        buffer.write(f'Schoenfeld check unavailable: {type(exc).__name__}: {exc}\n')
+        covariates = [column for column in data.columns if column not in {'start', 'stop', 'event', 'Code'}]
+        interaction_data = data.copy()
+        log_stop = np.log(np.maximum(interaction_data['stop'], 1))
+        interaction_columns = []
+        for column in covariates:
+            interaction_column = f'{column}_x_log_stop'
+            interaction_data[interaction_column] = interaction_data[column] * log_stop
+            interaction_columns.append(interaction_column)
 
-# Add dummy variable for spell_group (1 = UM, 0 = LM)
-df['is_UM'] = (df['spell_group'] == 'UM').astype(int)
+        interaction_model = CoxPHFitter()
+        interaction_model.fit(
+            interaction_data[['start', 'stop', 'event', 'Code'] + covariates + interaction_columns],
+            duration_col='stop', event_col='event', entry_col='start', cluster_col='Code'
+        )
+        interaction_summary = interaction_model.summary.loc[interaction_columns, ['coef', 'p']]
+        buffer.write('\nFallback time-interaction test (covariate x log(stop)):\n')
+        buffer.write(interaction_summary.to_string())
+        buffer.write('\nInterpretation: p < 0.05 suggests a time-varying effect and possible PH violation.\n')
+        interaction_summary.to_csv(output_path.replace('.txt', '.csv'))
+        status = 'fallback_time_interaction'
+    with open(output_path, 'w', encoding='utf-8') as report_file:
+        report_file.write(f'Status: {status}\n\n{buffer.getvalue()}')
+    print(f'PH check ({status}): {output_path}')
 
-cph_combined = CoxPHFitter()
-cph_combined.fit(
-    df[['start', 'stop', 'event', 'is_UM', 'AGEDEP', 'GE', 'IND', 'TO']],
-    duration_col='stop',
-    event_col='event',
-    entry_col='start'
-)
-cph_combined.print_summary()
 
-# Save forest plot
-fig, ax = plt.subplots(figsize=(10, 6))
-cph_combined.plot(ax=ax)
-ax.set_title('Cox PH Model - Hazard Ratios (Combined LM + UM)', fontsize=14)
-plt.tight_layout()
-plt.savefig('report/cox_forest_combined.png', dpi=150)
-plt.close()
-print("=> Saved: report/cox_forest_combined.png")
+def fit_model(data, covariates, label, output_suffix=''):
+    model_data = data[['start', 'stop', 'event', 'Code'] + covariates].copy()
+    model = CoxPHFitter()
+    model.fit(model_data, duration_col='stop', event_col='event', entry_col='start', cluster_col='Code')
+    model.print_summary()
+    check_ph(model, model_data, f'report/ph_assumptions_{label}{output_suffix}.txt')
+    model.summary.to_csv(f'report/cox_summary_{label}{output_suffix}.csv')
 
-# ============================================================
-# MODEL 2: LM only (Lower-Middle -> Upper-Middle)
-# ============================================================
-print("\n### MODEL 2: LM ONLY (LM -> UM) ###")
+    fig, ax = plt.subplots(figsize=(10, 6))
+    model.plot(ax=ax)
+    ax.set_title(f'Cox PH - {label} [Robust SE]', fontsize=14)
+    plt.tight_layout()
+    plt.savefig(f'report/cox_forest_{label}{output_suffix}.png', dpi=150)
+    plt.close()
+    return model
 
-df_lm = df[df['spell_group'] == 'LM'].copy()
 
-cph_lm = CoxPHFitter()
-cph_lm.fit(
-    df_lm[['start', 'stop', 'event', 'AGEDEP', 'GE', 'IND', 'TO']],
-    duration_col='stop',
-    event_col='event',
-    entry_col='start'
-)
-cph_lm.print_summary()
+def run_branch(covariates, output_suffix='', branch_name='main'):
+    os.makedirs('report', exist_ok=True)
+    df = pd.read_csv('survival_data.csv')
+    missing = [column for column in covariates if column not in df.columns]
+    if missing:
+        raise ValueError(f'Missing required covariates for {branch_name}: {", ".join(missing)}')
 
-fig, ax = plt.subplots(figsize=(10, 6))
-cph_lm.plot(ax=ax)
-ax.set_title('Cox PH Model - LM to UM Transition', fontsize=14)
-plt.tight_layout()
-plt.savefig('report/cox_forest_lm.png', dpi=150)
-plt.close()
-print("=> Saved: report/cox_forest_lm.png")
+    print('=' * 60)
+    print(f'COX PH MODEL - {branch_name.upper()} ({", ".join(covariates)})')
+    print('=' * 60)
+    df['is_UM'] = (df['spell_group'] == 'UM').astype(int)
+    combined = fit_model(df, covariates + ['is_UM'], 'combined', output_suffix)
+    lm = fit_model(df[df['spell_group'] == 'LM'], covariates, 'lm', output_suffix)
+    um = fit_model(df[df['spell_group'] == 'UM'], covariates, 'um', output_suffix)
 
-# ============================================================
-# MODEL 3: UM only (Upper-Middle -> High)
-# ============================================================
-print("\n### MODEL 3: UM ONLY (UM -> H) ###")
+    df_spell = df.groupby(['spell_id', 'spell_group']).agg(duration=('stop', 'max'), event=('event', 'max')).reset_index()
+    fig, ax = plt.subplots(figsize=(10, 6))
+    kmf = KaplanMeierFitter()
+    for group_name, group_data in df_spell.groupby('spell_group'):
+        kmf.fit(group_data['duration'], group_data['event'], label=f'{group_name} Group')
+        kmf.plot_survival_function(ax=ax)
+    ax.set_title(f'Kaplan-Meier Survival Curves [{branch_name}]')
+    ax.set_xlabel('Years in Income Group')
+    ax.set_ylabel('Survival Probability')
+    ax.legend(fontsize=12)
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(f'report/kaplan_meier{output_suffix}.png', dpi=150)
+    plt.close()
+    return combined, lm, um
 
-df_um = df[df['spell_group'] == 'UM'].copy()
 
-cph_um = CoxPHFitter()
-cph_um.fit(
-    df_um[['start', 'stop', 'event', 'AGEDEP', 'GE', 'IND', 'TO']],
-    duration_col='stop',
-    event_col='event',
-    entry_col='start'
-)
-cph_um.print_summary()
-
-fig, ax = plt.subplots(figsize=(10, 6))
-cph_um.plot(ax=ax)
-ax.set_title('Cox PH Model - UM to H Transition', fontsize=14)
-plt.tight_layout()
-plt.savefig('report/cox_forest_um.png', dpi=150)
-plt.close()
-print("=> Saved: report/cox_forest_um.png")
-
-# ============================================================
-# KAPLAN-MEIER CURVES
-# ============================================================
-print("\n### KAPLAN-MEIER SURVIVAL CURVES ###")
-
-# Get duration and event per spell (last row of each spell)
-df_spell = df.groupby(['Code', 'spell_group']).agg(
-    duration=('stop', 'max'),
-    event=('event', 'max')
-).reset_index()
-
-fig, ax = plt.subplots(figsize=(10, 6))
-kmf = KaplanMeierFitter()
-
-for group_name, group_data in df_spell.groupby('spell_group'):
-    kmf.fit(group_data['duration'], group_data['event'], label=f'{group_name} Group')
-    kmf.plot_survival_function(ax=ax)
-
-ax.set_title('Kaplan-Meier Survival Curves by Income Group', fontsize=14)
-ax.set_xlabel('Years in Income Group', fontsize=12)
-ax.set_ylabel('Survival Probability (Probability of NOT transitioning)', fontsize=12)
-ax.legend(fontsize=12)
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.savefig('report/kaplan_meier.png', dpi=150)
-plt.close()
-print("=> Saved: report/kaplan_meier.png")
-
-# ============================================================
-# PH ASSUMPTION TEST (Schoenfeld Residuals)
-# ============================================================
-print("\n### PROPORTIONAL HAZARDS TEST (Combined Model) ###")
-try:
-    results = cph_combined.check_assumptions(df[['start', 'stop', 'event', 'is_UM', 'AGEDEP', 'GE', 'IND', 'TO']], 
-                                              p_value_threshold=0.05,
-                                              show_plots=False)
-    print("PH assumption test completed.")
-except Exception as e:
-    print(f"PH test note: {e}")
-
-# ============================================================
-# SAVE SUMMARY TABLES TO CSV
-# ============================================================
-cph_combined.summary.to_csv('report/cox_summary_combined.csv')
-cph_lm.summary.to_csv('report/cox_summary_lm.csv')
-cph_um.summary.to_csv('report/cox_summary_um.csv')
-print("\n=> All summary tables saved to report/ folder.")
-print("=> DONE!")
+if __name__ == '__main__':
+    run_branch(FULL_COVARIATES, branch_name='main')
