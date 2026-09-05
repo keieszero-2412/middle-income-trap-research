@@ -34,6 +34,11 @@
 
 ![Forest Plot - Combined](file:///d:/FTU/3.1/DE/MID/MODEL/report/cox_forest_combined.png)
 
+**Cách đọc Forest Plot:**
+- Các điểm hình vuông thể hiện mức độ tác động (Log Hazard Ratio) của từng biến. 
+- Thanh ngang đi qua các điểm là **Khoảng tin cậy 95%**. Nếu thanh ngang này **KHÔNG cắt đường đứt nét số 0**, biến đó có ý nghĩa thống kê (p < 0.05). Ngược lại, nếu thanh ngang cắt ngang số 0, tác động của biến đó không chắc chắn.
+- **Tại mô hình này:** `is_UM` và `AGEDEP` nằm hoàn toàn về bên trái mốc 0 (tác động cản trở thăng hạng), trong khi `GE` nằm xa về bên phải (thúc đẩy thăng hạng rất mạnh). Các thanh của `IND` và `TO` đều cắt qua mốc 0, nghĩa là không có tác động rõ rệt.
+
 ---
 
 ### 2.2. Mô hình LM → UM (Thoát bẫy Thu nhập Trung bình Thấp)
@@ -49,6 +54,11 @@
 
 ![Forest Plot - LM](file:///d:/FTU/3.1/DE/MID/MODEL/report/cox_forest_lm.png)
 
+**Diễn giải Forest Plot (LM → UM):**
+- **AGEDEP** nằm lệch hẳn sang trái mốc 0: gánh nặng người phụ thuộc thực sự cản trở các nước thu nhập trung bình thấp vươn lên nhóm cao hơn.
+- **GE** nằm lệch sang phải: thể chế quản trị nhà nước tốt là bệ phóng quan trọng.
+- **IND** và **TO** vẫn cắt đường số 0, cho thấy trong giai đoạn đầu này, mức độ công nghiệp hóa hay độ mở thương mại tự do chưa đủ tạo ra sự khác biệt quyết định để thoát bẫy.
+
 ---
 
 ### 2.3. Mô hình UM → H (Thoát bẫy Thu nhập Trung bình Cao)
@@ -63,6 +73,11 @@
 | **TO** | +0.01 | 1.01 | 0.20 | Không có ý nghĩa |
 
 ![Forest Plot - UM](file:///d:/FTU/3.1/DE/MID/MODEL/report/cox_forest_um.png)
+
+**Diễn giải Forest Plot (UM → H):**
+- **GE vươn cực xa về bên phải:** Khoảng cách của GE so với mốc 0 là lớn nhất trong tất cả các mô hình. Điều này chứng tỏ hiệu quả chính phủ là "chìa khóa vàng" mang tính quyết định ở chặng đua cuối cùng.
+- **AGEDEP** lúc này có thanh ngang chạm và cắt nhẹ mốc 0 (p=0.10), nghĩa là gánh nặng nhân khẩu học không còn là rào cản quá lớn so với giai đoạn trước.
+- **IND** và **TO** tiếp tục duy trì trạng thái cắt mốc 0, không có ý nghĩa thống kê.
 
 ---
 
