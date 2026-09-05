@@ -1,125 +1,76 @@
-# Kết quả Mô hình Cox Proportional Hazards — Bẫy Thu nhập Trung bình
+# Kết quả mô hình Cox Proportional Hazards - Main
 
-**Branch:** `main` | **Biến kiểm soát:** AGEDEP, GE, IND, TO
-**Dữ liệu:** 171 quốc gia, giai đoạn 2000–2026 | **Phần mềm:** `lifelines` (Python)
+**Branch:** `main`  
+**Biến:** `TFP`, `GE`, `AGEDEP`, `IND`, `TO`, `CREDIT`, `ECI`  
+**Dữ liệu:** 2000-2026  
+**Phương pháp:** counting-process Cox PH, robust SE clustered theo `Code`
 
----
-
-## 1. Tổng quan Dữ liệu Survival
+## 1. Survival sample
 
 | Chỉ số | Giá trị |
-|---|---|
-| Tổng số quan sát (observation rows) | 2.308 |
-| Tổng số giai đoạn (spells) | 168 |
-| Giai đoạn ở nhóm LM | 90 (50 đã thăng hạng lên UM) |
-| Giai đoạn ở nhóm UM | 78 (27 đã thăng hạng lên H) |
-| **Tổng sự kiện thăng hạng (events)** | **77** |
-| Tổng bị kiểm duyệt (censored) | 91 |
+|---|---:|
+| Quan sát | 1,404 |
+| Spells | 135 |
+| LM spells | 66 |
+| LM events | 38 |
+| UM spells | 69 |
+| UM events | 26 |
+| Tổng events | 64 |
+| Censored | 71 |
 
----
+Chỉ giữ hai transition `LM -> UM` và `UM -> H`. Các bước nhảy `LM -> H` bị loại khỏi mẫu.
 
-## 2. Kết quả Mô hình
+## 2. Kết quả mô hình
 
-### 2.1. Mô hình Tổng hợp (LM + UM)
+### Combined LM + UM
 
-> **Concordance = 0.71** (Khả năng dự đoán tốt)
+| Biến | Hazard ratio | p-value |
+|---|---:|---:|
+| TFP | 5.63 | 0.176 |
+| GE | 2.38 | 0.077 |
+| AGEDEP | 0.95 | 0.015 |
+| IND | 0.94 | 0.142 |
+| TO | 1.00 | 0.567 |
+| CREDIT | 0.99 | 0.263 |
+| ECI | 2.21 | 0.081 |
+| is_UM | 0.23 | 0.005 |
 
-| Biến | Hệ số (coef) | Hazard Ratio | p-value | Ý nghĩa |
-|---|---|---|---|---|
-| **is_UM** | -1.21 | **0.30** | **<0.005** ⭐ | Ở nhóm UM khó thăng hạng hơn LM 70% |
-| **AGEDEP** | -0.05 | **0.95** | **<0.005** ⭐ | Tỷ lệ phụ thuộc tuổi cao → khó thăng hạng |
-| **GE** | +0.97 | **2.65** | **<0.005** ⭐ | Hiệu quả CP tăng 1 đơn vị → xác suất thăng hạng tăng 165% |
-| **IND** | -0.02 | 0.98 | 0.13 | Không có ý nghĩa thống kê |
-| **TO** | +0.00 | 1.00 | 0.78 | Không có ý nghĩa thống kê |
+Concordance: `0.77`; partial AIC: `498.45`.
 
-![Forest Plot - Combined](file:///d:/FTU/3.1/DE/MID/MODEL/report/cox_forest_combined.png)
+### LM -> UM
 
-**Cách đọc Forest Plot:**
-- Các điểm hình vuông thể hiện mức độ tác động (Log Hazard Ratio) của từng biến. 
-- Thanh ngang đi qua các điểm là **Khoảng tin cậy 95%**. Nếu thanh ngang này **KHÔNG cắt đường đứt nét số 0**, biến đó có ý nghĩa thống kê (p < 0.05). Ngược lại, nếu thanh ngang cắt ngang số 0, tác động của biến đó không chắc chắn.
-- **Tại mô hình này:** `is_UM` và `AGEDEP` nằm hoàn toàn về bên trái mốc 0 (tác động cản trở thăng hạng), trong khi `GE` nằm xa về bên phải (thúc đẩy thăng hạng rất mạnh). Các thanh của `IND` và `TO` đều cắt qua mốc 0, nghĩa là không có tác động rõ rệt.
+| Biến | Hazard ratio | p-value |
+|---|---:|---:|
+| TFP | 57.83 | 0.049 |
+| GE | 1.50 | 0.546 |
+| AGEDEP | 0.93 | 0.004 |
+| IND | 0.95 | 0.244 |
+| TO | 0.99 | 0.375 |
+| CREDIT | 1.01 | 0.626 |
+| ECI | 1.12 | 0.839 |
 
----
+Concordance: `0.72`; partial AIC: `249.94`.
 
-### 2.2. Mô hình LM → UM (Thoát bẫy Thu nhập Trung bình Thấp)
+### UM -> H
 
-> **Concordance = 0.71** | 1.271 quan sát | 63 sự kiện thăng hạng
+| Biến | Hazard ratio | p-value |
+|---|---:|---:|
+| TFP | 2.90 | 0.662 |
+| GE | 7.25 | 0.005 |
+| AGEDEP | 0.95 | 0.388 |
+| IND | 0.82 | 0.026 |
+| TO | 1.00 | 0.955 |
+| CREDIT | 0.98 | 0.094 |
+| ECI | 22.01 | <0.005 |
 
-| Biến | Hệ số (coef) | Hazard Ratio | p-value | Ý nghĩa |
-|---|---|---|---|---|
-| **AGEDEP** | -0.05 | **0.95** | **<0.005** ⭐ | Tác động tiêu cực mạnh |
-| **GE** | +0.60 | **1.82** | **0.03** ⭐ | Tác động tích cực có ý nghĩa |
-| **IND** | -0.02 | 0.98 | 0.23 | Không có ý nghĩa |
-| **TO** | -0.00 | 1.00 | 0.35 | Không có ý nghĩa |
+Concordance: `0.88`; partial AIC: `151.45`.
 
-![Forest Plot - LM](file:///d:/FTU/3.1/DE/MID/MODEL/report/cox_forest_lm.png)
+## 3. Kiểm định proportional hazards
 
-**Diễn giải Forest Plot (LM → UM):**
-- **AGEDEP** nằm lệch hẳn sang trái mốc 0: gánh nặng người phụ thuộc thực sự cản trở các nước thu nhập trung bình thấp vươn lên nhóm cao hơn.
-- **GE** nằm lệch sang phải: thể chế quản trị nhà nước tốt là bệ phóng quan trọng.
-- **IND** và **TO** vẫn cắt đường số 0, cho thấy trong giai đoạn đầu này, mức độ công nghiệp hóa hay độ mở thương mại tự do chưa đủ tạo ra sự khác biệt quyết định để thoát bẫy.
+Lifelines không hỗ trợ Schoenfeld residuals cho dữ liệu có `entry` time. Branch dùng kiểm định thay thế bằng tương tác `covariate x log(stop)`. Kết quả chi tiết nằm trong `report/ph_assumptions_*.csv` và `.txt`; chưa có bằng chứng vi phạm PH ở ngưỡng 5%.
 
----
+## 4. Output
 
-### 2.3. Mô hình UM → H (Thoát bẫy Thu nhập Trung bình Cao)
-
-> **Concordance = 0.74** (Dự đoán tốt nhất!) | 1.037 quan sát | 37 sự kiện thăng hạng
-
-| Biến | Hệ số (coef) | Hazard Ratio | p-value | Ý nghĩa |
-|---|---|---|---|---|
-| **GE** | +1.44 | **4.20** | **<0.005** ⭐ | Tác động RẤT MẠNH: GE tăng 1 đơn vị → xác suất thăng hạng tăng 320%! |
-| **AGEDEP** | -0.03 | 0.97 | 0.10 | Gần ngưỡng nhưng chưa đạt ý nghĩa |
-| **IND** | -0.04 | 0.96 | 0.13 | Không có ý nghĩa |
-| **TO** | +0.01 | 1.01 | 0.20 | Không có ý nghĩa |
-
-![Forest Plot - UM](file:///d:/FTU/3.1/DE/MID/MODEL/report/cox_forest_um.png)
-
-**Diễn giải Forest Plot (UM → H):**
-- **GE vươn cực xa về bên phải:** Khoảng cách của GE so với mốc 0 là lớn nhất trong tất cả các mô hình. Điều này chứng tỏ hiệu quả chính phủ là "chìa khóa vàng" mang tính quyết định ở chặng đua cuối cùng.
-- **AGEDEP** lúc này có thanh ngang chạm và cắt nhẹ mốc 0 (p=0.10), nghĩa là gánh nặng nhân khẩu học không còn là rào cản quá lớn so với giai đoạn trước.
-- **IND** và **TO** tiếp tục duy trì trạng thái cắt mốc 0, không có ý nghĩa thống kê.
-
----
-
-## 3. Đường cong Kaplan-Meier
-
-![Kaplan-Meier Survival Curves](file:///d:/FTU/3.1/DE/MID/MODEL/report/kaplan_meier.png)
-
-**Nhận xét:** Đường cong sinh tồn của nhóm UM nằm **cao hơn** nhóm LM, có nghĩa là quốc gia ở nhóm UM có xu hướng **ở lại lâu hơn** trước khi thăng hạng. Điều này xác nhận giả thuyết về "Bẫy Thu nhập Trung bình Cao" — càng gần đích (High Income) thì càng khó vượt qua.
-
----
-
-## 4. Diễn giải Kinh tế học
-
-### Phát hiện chính
-
-> [!IMPORTANT]
-> **GE (Government Effectiveness) là biến số quan trọng nhất** trong việc thoát bẫy thu nhập trung bình, đặc biệt ở giai đoạn UM → H.
-
-1. **Hiệu quả Chính phủ (GE)** là yếu tố quyết định duy nhất có ý nghĩa thống kê ở **cả 3 mô hình**. Đặc biệt, ở giai đoạn UM → H, tác động của GE mạnh gấp 2.3 lần so với giai đoạn LM → UM (HR = 4.20 vs 1.82). Điều này phản ánh thực tế: để từ "nước phát triển trung bình" trở thành "nước phát triển", cần một bộ máy nhà nước hiệu quả, minh bạch và ít tham nhũng.
-
-2. **Tỷ lệ Phụ thuộc Tuổi (AGEDEP)** có tác động tiêu cực ở giai đoạn LM → UM nhưng mất dần ý nghĩa ở giai đoạn UM → H. Tỷ lệ dân số trẻ em/người già cao tạo ra gánh nặng phúc lợi xã hội, kéo chậm quá trình thăng hạng ở giai đoạn đầu.
-
-3. **Công nghiệp hóa (IND) và Độ mở thương mại (TO)** đều **KHÔNG có ý nghĩa thống kê** trong bất kỳ mô hình nào. Điều này gây bất ngờ nhưng cũng hợp lý: nhiều quốc gia có tỷ trọng công nghiệp cao hoặc thương mại mở nhưng vẫn mắc kẹt trong bẫy thu nhập trung bình (ví dụ: Thái Lan, Malaysia). Điều cốt lõi không phải là sản xuất nhiều hay buôn bán nhiều, mà là **chất lượng thể chế**.
-
-### Hàm ý Chính sách cho Việt Nam
-
-> [!TIP]
-> Việt Nam vừa thăng hạng lên UM (2025). Để tiếp tục tiến lên H, yếu tố quan trọng nhất KHÔNG phải là tăng cường công nghiệp hóa hay mở cửa thương mại, mà là **nâng cao chất lượng quản trị quốc gia** (cải cách hành chính, chống tham nhũng, tăng minh bạch).
-
----
-
-## 5. Kiểm định Giả định PH
-
-> [!NOTE]
-> Kiểm định Schoenfeld Residuals không hỗ trợ trực tiếp cho định dạng counting process (entry/exit) trong phiên bản lifelines hiện tại. Tuy nhiên, chỉ số Concordance cao (0.71 - 0.74) và Log-likelihood ratio test có ý nghĩa thống kê (p < 0.005) cho thấy mô hình phù hợp tốt với dữ liệu.
-
----
-
-## 6. Tóm tắt Kỹ thuật
-
-| Mô hình | Concordance | AIC | Log-likelihood ratio | p-value |
-|---|---|---|---|---|
-| Combined (LM+UM) | 0.71 | 886.47 | 62.96 (df=5) | <0.005 |
-| LM → UM | 0.71 | 479.94 | 36.32 (df=4) | <0.005 |
-| UM → H | 0.74 | 277.07 | 30.41 (df=4) | <0.005 |
+- Summary: `report/cox_summary_combined.csv`, `report/cox_summary_lm.csv`, `report/cox_summary_um.csv`
+- Forest plots: `report/cox_forest_combined.png`, `report/cox_forest_lm.png`, `report/cox_forest_um.png`
+- Kaplan-Meier: `report/kaplan_meier.png`
